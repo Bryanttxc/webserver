@@ -1,5 +1,6 @@
 #pragma once
 
+#include <error.h>
 #include <pthread.h> // mutex relevant
 #include <semaphore.h> // semaphore relevant
 
@@ -17,7 +18,7 @@ public:
     Mutex(){
         // NULL 表示默认属性
         if(pthread_mutex_init(&m_mutex, NULL) != 0){
-            //输出错误信息
+            perror("pthread_mutex_init");
         };
     }
 
@@ -26,17 +27,17 @@ public:
     */
     ~Mutex(){
         if(pthread_mutex_destroy(&m_mutex) != 0){
-            //输出错误信息
+             perror("pthread_mutex_destroy");
         }
     }
-     
+
     /**
     * @brief create lock
     * 
     */
     void lock(){
         if(pthread_mutex_lock(&m_mutex) != 0){
-            //输出错误信息
+            perror("pthread_mutex_lock");
         }
     }
 
@@ -46,7 +47,7 @@ public:
     */
     void unlock(){
         if(pthread_mutex_unlock(&m_mutex) != 0){
-            //输出错误信息
+            perror("pthread_mutex_unlock");
         }
     }
 
@@ -66,7 +67,7 @@ public:
         // pshared=0: 进程中的所有线程共享信号量
         // value=0: 信号量初始值为0
         if(sem_init(&m_sem, 0, 0) != 0){
-            //输出错误信息
+            perror("sem_init");
         }
     }
 
@@ -78,7 +79,7 @@ public:
         // pshared=0: 进程中的所有线程共享信号量
         // value=0: 信号量初始值为0
         if(sem_init(&m_sem, 0, val) != 0){
-            //输出错误信息
+            perror("sem_init");
         }
     }
 
@@ -87,7 +88,7 @@ public:
      */
     ~Semaphore(){   
         if(sem_destroy(&m_sem) != 0){
-            //输出错误信息
+            perror("sem_destroy");
         }
     }
 
@@ -110,14 +111,14 @@ public:
     int timewait(){
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
-        ts.tv_sec += 10; // 1s
+        ts.tv_sec += 10; // 10s
         return sem_timedwait(&m_sem, &ts);
     }
 
     /**
      * @brief release a semaphore
      * 
-     * @return true 释放成功
+     * @return true release success
      * @return false
      */
     bool post(){
