@@ -3,7 +3,6 @@
 #include "log/block_queue.hh"
 
 void test_logger(){
-    bryant::Logger::getInstance()->init("ServerLog");
     LOG_DEBUG("%s","test Debug!");
     LOG_INFO("%s","test Info!");
     LOG_WARN("%s","test Warn!");

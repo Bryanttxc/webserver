@@ -5,6 +5,14 @@
 > * 日志系统采用单例模式
 > * 异步日志系统采用阻塞队列实现，数据结构采用循环数组
 
+## fiberLibrary
+### thread
+自定义线程
+> * 封装pthread类，增加信号量控制
+### fiber
+自定义协程
+> * 采用非对称、独立栈的形式构建协程
+
 ## util
 工具类，包含一些常用的工具函数
 > * locker.hh
@@ -18,3 +26,8 @@
 ### test_logger.cc
 > * 测试Logger类成员函数执行是否正确
 > * 测试BlockQueue类运行是否正常
+### test_thread.cc
+> * 测试Thread类成员函数执行是否正确
+### test_fiber.cc
+> * 配合Thread类测试Fiber类成员函数
+> * 根据日志查看Fiber的异步运行顺序

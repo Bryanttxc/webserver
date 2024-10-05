@@ -38,7 +38,7 @@ public:
      * @brief initalize relevant parameters
      * 
      */
-    bool init(const char* log_name, int max_rows = 50000, int log_buf_size = 8192);
+    bool init(const char* log_name, int max_rows = 50000, int log_buf_size = 8192, int queue_size = 0);
 
     /**
      * @brief write log, sync/async
@@ -57,6 +57,13 @@ public:
      * 
      */
     void flush();
+
+    /**
+     * @brief Get the Fp object
+     * 
+     * @return FILE* 
+     */
+    FILE* getFp() const {return m_fp;}
 
 private:
     Logger();
@@ -83,6 +90,7 @@ private: // ps: 不太清楚有什么变量
     int max_queue_size; // 队列最大长度
     
     Mutex m_mutex; // 互斥锁
+    Semaphore m_sem; // 信号量
 
     int m_today;        //因为按天分类,记录当前时间是那一天
     int m_close_log;    //关闭日志
@@ -90,9 +98,39 @@ private: // ps: 不太清楚有什么变量
 };
 
 // 宏定义函数，方便调用
-#define LOG_DEBUG(format, ...) (bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::DEBUG, format, ##__VA_ARGS__))
-#define LOG_INFO(format, ...)  (bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::INFO, format, ##__VA_ARGS__))
-#define LOG_WARN(format, ...)  (bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::WARNING, format, ##__VA_ARGS__))
-#define LOG_ERROR(format, ...) (bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::ERROR, format, ##__VA_ARGS__))
+#define LOG_DEBUG(format, ...) \
+    do { \
+        if(bryant::Logger::getInstance()->getFp() == NULL) { \
+            bryant::Logger::getInstance()->init("ServerLog",50000,8192,1000); \
+        } \
+        bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::DEBUG, format, ##__VA_ARGS__); \
+    } while(0)
+
+
+#define LOG_INFO(format, ...) \
+    do { \
+        if(bryant::Logger::getInstance()->getFp() == NULL) { \
+            bryant::Logger::getInstance()->init("ServerLog",50000,8192,1000); \
+        } \
+        bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::INFO, format, ##__VA_ARGS__); \
+    } while(0)
+
+
+#define LOG_WARN(format, ...) \
+    do { \
+        if(bryant::Logger::getInstance()->getFp() == NULL) { \
+            bryant::Logger::getInstance()->init("ServerLog",50000,8192,1000); \
+        } \
+        bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::WARNING, format, ##__VA_ARGS__); \
+    } while(0)
+
+
+#define LOG_ERROR(format, ...) \
+    do { \
+        if(bryant::Logger::getInstance()->getFp() == NULL) { \
+            bryant::Logger::getInstance()->init("ServerLog",50000,8192,1000); \
+        } \
+        bryant::Logger::getInstance()->write_log(bryant::Logger::LEVEL::ERROR, format, ##__VA_ARGS__); \
+    } while(0)
 
 }  // namespace bryant

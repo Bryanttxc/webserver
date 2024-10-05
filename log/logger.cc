@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "logger.hh"
 
 namespace bryant{
@@ -9,8 +11,16 @@ Logger::Logger(){
 
 
 Logger::~Logger(){
+    if(m_write_buf != NULL){
+        delete[] m_write_buf;
+    }
+
     if(m_fp != NULL){
         fclose(m_fp);
+    }
+
+    if(m_block_queue != NULL){
+        delete m_block_queue;
     }
 }
 
@@ -24,13 +34,31 @@ Logger::getInstance(){
 
 
 bool
-Logger::init(const char* log_name, int max_rows, int log_buf_size)
+Logger::init(const char* log_name, int max_rows, int log_buf_size, int queue_size)
 {
     // 变量初始化
     m_max_rows = max_rows;
     m_logBuf_size = log_buf_size;
     m_write_buf = new char[m_logBuf_size]; // cxt: 一开始没加
     memset(m_write_buf, '\0', m_logBuf_size); // 全部赋值为'/0'
+
+    // 阻塞队列初始化
+    if(queue_size >= 1){
+        m_async_log = true;
+        m_block_queue = new BlockQueue<std::string>(queue_size);
+        // 创建线程专门用于写入文件
+        pthread_t async_thread;
+        int rt = pthread_create(&async_thread, NULL, flush_log_thread, NULL);
+        if(rt){
+            LOG_ERROR("pthread_create error");
+            throw std::logic_error("pthread_create error");
+        }
+        rt = pthread_detach(async_thread);
+        if(rt){
+            LOG_ERROR("pthread_detach error");
+            throw std::logic_error("pthread_create error");
+        }
+    }
 
     // 日志名初始化
     /// 获取当前时间
@@ -137,12 +165,13 @@ Logger::write_log(LEVEL level, const char* format, ...)
 
     va_end(args);
 
-    if(m_async_log){
+    if(m_async_log && !m_block_queue->isFull()){
         // 异步
         char content[1024] = {0};
         snprintf(content, sizeof(content), "%s", m_write_buf);
         std::string str = content;
         m_block_queue->enqueue(str);
+        m_sem.post(); // 通知thread可写
     } else {
         // 同步
         fputs(m_write_buf, m_fp);
@@ -155,7 +184,10 @@ Logger::write_log(LEVEL level, const char* format, ...)
 // 已解决：这个是thread的callback
 void* 
 Logger::flush_log_thread(void* arg){
-    Logger::getInstance()->async_write_log();
+    while(true){
+        Logger::getInstance()->m_sem.wait();
+        Logger::getInstance()->async_write_log();
+    }
     return nullptr;
 }
 

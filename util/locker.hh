@@ -27,7 +27,6 @@ public:
     */
     ~Mutex(){
         if(pthread_mutex_destroy(&m_mutex) != 0){
-             perror("pthread_mutex_destroy");
         }
     }
 
@@ -88,7 +87,6 @@ public:
      */
     ~Semaphore(){   
         if(sem_destroy(&m_sem) != 0){
-            perror("sem_destroy");
         }
     }
 
