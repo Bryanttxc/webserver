@@ -209,5 +209,7 @@ int main(){
     printf("start to test Semaphore...\n");
     test_semaphore(2);
 
+    printf("success!\n");
+    
     return 0;
 }

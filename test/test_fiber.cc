@@ -20,7 +20,7 @@ void test_fiber(){
         bryant::Thread::GetThis()->getName().c_str(),
         bryant::Fiber::GetThis()->getId());
     
-    bryant::Fiber::ptr fiber(new bryant::Fiber(run_in_fiber)); // 任务协程
+    bryant::Fiber::ptr fiber(new bryant::Fiber(run_in_fiber, 0, false)); // 任务协程
 
     fiber->resume(); // 任务协程第一次执行
     LOG_INFO("Thread %s main Fiber %lu after first resume", 

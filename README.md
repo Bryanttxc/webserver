@@ -6,12 +6,13 @@
 > * 异步日志系统采用阻塞队列实现，数据结构采用循环数组
 
 ## fiberLibrary
-### thread
-自定义线程
+### thread 线程
 > * 封装pthread类，增加信号量控制
-### fiber
-自定义协程
+### fiber 协程
 > * 采用非对称、独立栈的形式构建协程
+### scheduler N-M协程调度器
+> * 采用N-M协程调度器，实现协程的异步运行
+> * 可将主线程作为调度线程
 
 ## util
 工具类，包含一些常用的工具函数
@@ -31,3 +32,6 @@
 ### test_fiber.cc
 > * 配合Thread类测试Fiber类成员函数
 > * 根据日志查看Fiber的异步运行顺序
+### test_scheduler.cc
+> * 测试use_caller=true时，单线程-Fiber的异步运行顺序
+> * 测试use_caller=false时，多线程-Fiber的异步运行顺序

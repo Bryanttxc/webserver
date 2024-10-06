@@ -20,9 +20,13 @@ public:
     }
 };
 
+class Scheduler;
 
 // 协程
 class Fiber : public std::enable_shared_from_this<Fiber>{
+
+friend class Scheduler;
+
 public:
     using ptr = std::shared_ptr<Fiber>;
 
@@ -38,7 +42,7 @@ public:
      * @param cb callback function
      * @param stack_size stack size of fiber
      */
-    Fiber(std::function<void()> cb, int stack_size = 0);
+    Fiber(std::function<void()> cb, int stack_size = 0, bool run_in_scheduler = true);
 
     /**
      * @brief 销毁协程
@@ -114,6 +118,7 @@ private:
     void* m_stack;              // 栈地址
     std::function<void()> m_cb; // 回调函数
     ucontext_t m_ctx;           // 上下文对象
+    bool m_run_in_scheduler;    // 是否受调度协程控制
 };
 
 }

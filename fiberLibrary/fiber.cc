@@ -2,6 +2,7 @@
 #include <atomic>
 
 #include "fiber.hh"
+#include "scheduler.hh"
 
 namespace bryant{
 
@@ -31,9 +32,10 @@ Fiber::GetThis(){
 }
 
 
-Fiber::Fiber(std::function<void()> cb, int stack_size):
+Fiber::Fiber(std::function<void()> cb, int stack_size, bool run_in_scheduler):
     m_cb(std::move(cb)), 
-    m_state(READY){
+    m_state(READY),
+    m_run_in_scheduler(run_in_scheduler){
 
     ++s_fiber_count;
     m_id = s_fiber_id;
@@ -54,7 +56,7 @@ Fiber::Fiber(std::function<void()> cb, int stack_size):
     
     makecontext(&m_ctx, &Fiber::mainFun, 0); // 将m_ctx与m_cb绑定
 
-    LOG_INFO("Mission Fiber %lu created", m_id);
+    LOG_DEBUG("[Fiber] Thread %lu Mission Fiber %lu created", bryant::GetThreadId(), m_id);
 }
 
 
@@ -69,7 +71,7 @@ Fiber::Fiber(){
 
     assert(getcontext(&m_ctx) == 0);
 
-    LOG_INFO("Main Fiber %lu created", m_id);
+    LOG_DEBUG("[Fiber] Thread %lu Main Fiber %lu created", bryant::GetThreadId(), m_id);
 }
 
 
@@ -89,7 +91,7 @@ Fiber::~Fiber(){
         }
     }
 
-    LOG_INFO("Fiber %lu destroyed", m_id);
+    LOG_DEBUG("[Fiber] Thread %lu Fiber %lu destroyed", bryant::GetThreadId(), m_id);
 }
 
 
@@ -99,9 +101,14 @@ Fiber::resume(){
     SetThis(this);
     m_state = RUNNING;
 
-    LOG_INFO("Fiber %lu resume: enter swapcontext", m_id);
-    assert(swapcontext(&t_thread_fiber->m_ctx, &m_ctx) == 0);
-    LOG_INFO("Fiber %lu resume: quit swapcontext", m_id);
+    LOG_DEBUG("[Fiber] Thread %lu Fiber %lu resume: enter swapcontext", bryant::GetThreadId(), m_id);
+    if(m_run_in_scheduler){
+        // 和调度器的调度协程交换上下文
+        assert(swapcontext(&(Scheduler::GetMainFiber()->m_ctx), &m_ctx) == 0);
+    } else {
+        assert(swapcontext(&(t_thread_fiber->m_ctx), &m_ctx) == 0);
+    }
+    LOG_DEBUG("[Fiber] Thread %lu Fiber %lu resume: quit swapcontext", bryant::GetThreadId(), m_id);
 }
 
 
@@ -113,9 +120,14 @@ Fiber::yield(){
         m_state = READY; // 之前错写成RUNNING
     }
 
-    LOG_INFO("Fiber %lu yield: enter swapcontext", m_id);
-    assert(swapcontext(&m_ctx, &(t_thread_fiber->m_ctx)) == 0);
-    LOG_INFO("Fiber %lu yield: quit swapcontext", m_id);
+    LOG_DEBUG("[Fiber] Thread %lu Fiber %lu yield: enter swapcontext", bryant::GetThreadId(), m_id);
+    if(m_run_in_scheduler){
+        // 和调度器的调度协程交换上下文
+        assert(swapcontext(&m_ctx, &(Scheduler::GetMainFiber()->m_ctx)) == 0);
+    } else {
+        assert(swapcontext(&m_ctx, &(t_thread_fiber->m_ctx)) == 0);
+    }
+    LOG_DEBUG("[Fiber] Thread %lu Fiber %lu yield: quit swapcontext", bryant::GetThreadId(), m_id);
 }
 
 
