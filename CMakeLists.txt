@@ -6,6 +6,7 @@ include_directories(.)
 include_directories(./util)
 include_directories(./log)
 include_directories(./fiberLibrary)
+include_directories(./timer)
 
 # find library
 find_library(PTHREAD pthread)
@@ -16,7 +17,8 @@ set(LIBS_SRC
     ./fiberLibrary/thread.cc
     ./fiberLibrary/fiber.cc
     ./fiberLibrary/scheduler.cc
-    ./fiberLibrary/iomanager.cc)
+    ./fiberLibrary/iomanager.cc
+    ./timer/timer.cc)
 
 # set library
 add_library(bryant SHARED ${LIBS_SRC})
@@ -51,3 +53,6 @@ target_link_libraries(test_scheduler ${LIBS})
 
 add_executable(test_iomanager test/test_iomanager.cc)
 target_link_libraries(test_iomanager ${LIBS})
+
+add_executable(test_timer test/test_timer.cc)
+target_link_libraries(test_timer ${LIBS})

@@ -7,12 +7,13 @@
 #include "scheduler.hh"
 #include "../util/locker.hh"
 #include "../log/logger.hh"
+#include "../timer/timer.hh"
 
 namespace bryant{
 
 // 协程 + IO
 // 主要解决
-class IOManager : public Scheduler {
+class IOManager : public Scheduler, public TimerManager {
 public:
     using ptr = std::shared_ptr<IOManager>;
 
@@ -115,6 +116,13 @@ protected:
      * @return false 
      */
     bool stopping() override;
+    bool stopping(uint64_t& timeout);
+
+    /**
+     * @brief notify epoll_wait to change timeout
+     * 
+     */
+    void onTimerInsertedAtFront() override;
 
 private:
     /**
@@ -160,7 +168,7 @@ private:
 private:
     int m_tickleFds[2];         // 用于通知IO线程的管道
     int m_epollfd;              // epoll文件描述符
-    int m_max_events = 64;      // epoll监听event数
+    int m_max_events = 256;      // epoll监听event数
 
     std::atomic<size_t> m_pendingEventCount = {0}; // 等待执行的事件数量
     std::vector<FdContexts*> m_fdContexts; // fd上下文数组

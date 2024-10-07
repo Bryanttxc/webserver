@@ -320,7 +320,17 @@ IOManager::tickle() {
 
 bool 
 IOManager::stopping(){
-    return Scheduler::stopping() && m_pendingEventCount == 0;
+    uint64_t timeout = 0;
+    return stopping(timeout);
+}
+
+
+bool
+IOManager::stopping(uint64_t& timeout){
+    timeout = getNextTimer();
+    return timeout == ~0ull
+        && m_pendingEventCount == 0
+        && Scheduler::stopping();
 }
 
 
@@ -337,13 +347,21 @@ IOManager::idle() {
     
     // 主循环
     while(true){
-        if(stopping()){
+        uint64_t next_timeout = 0;
+
+        if(stopping(next_timeout)){
             // 停止调度器
             break;
         }
 
-        static const int max_timeout = 5000;
-        int rt = epoll_wait(m_epollfd, events, m_max_events, max_timeout);
+        static const int max_timeout = 3000;
+        if(next_timeout != ~0ull) {
+            next_timeout = std::min((int)next_timeout, max_timeout);
+        } else {
+            next_timeout = max_timeout;
+        }
+
+        int rt = epoll_wait(m_epollfd, events, m_max_events, (int)next_timeout);
         if(rt < 0){
             if(errno == EINTR){
                 continue;
@@ -354,13 +372,22 @@ IOManager::idle() {
             break;
         }
 
+        // 处理超时事件
+        std::vector<std::function<void()> > cbs;
+        listExpiredCb(cbs);
+        if(!cbs.empty()) {
+            schedule(cbs.begin(), cbs.end());
+            cbs.clear();
+        }
+
+        // 处理响应事件
         for(int i = 0; i < rt; ++i){
             epoll_event& event = events[i];
 
             // 读取管道数据
             if(event.data.fd == m_tickleFds[0]){
-                uint8_t dummy;
-                while(read(m_tickleFds[0], &dummy, 1) > 0){
+                uint8_t dummy[256];
+                while(read(m_tickleFds[0], &dummy, sizeof(dummy)) > 0){
                     ;
                 }
                 continue;
@@ -426,4 +453,10 @@ IOManager::idle() {
 }
 
 
-};
+void
+IOManager::onTimerInsertedAtFront(){
+    tickle();
+}
+
+
+}; // end namespace bryant

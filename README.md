@@ -17,6 +17,15 @@
 > * 在scheduler的基础上，用epoll解决idle协程忙询占用CPU问题
 > * epoll事件支持添加、删除、取消
 
+## timer
+定时器相关类
+### timer
+> * 定时器类，包含取消，重置等功能
+> * 需要通过TimerManager类来创建
+### TimerManager
+> * 定时器管理类，包含增删改等功能
+> * 采用小根堆的方式，保证定时器按顺序执行
+
 ## util
 工具类，包含一些常用的工具函数
 > * locker.hh
@@ -40,3 +49,5 @@
 > * 测试use_caller=false时，多线程-Fiber的异步运行顺序
 ### test_iomanager.cc
 > * 待完善
+### test_timer.cc
+> * 测试TimerManager的功能是否正常
