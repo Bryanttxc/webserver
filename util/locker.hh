@@ -128,4 +128,60 @@ private:
     sem_t m_sem;
 };
 
+
+class RWMutex{
+public:
+    /**
+     * @brief Construct a new RWMutex object
+     */
+     RWMutex(){
+        if(pthread_rwlock_init(&m_rwlock, NULL) != 0){
+            perror("pthread_rwlock_init");
+        }
+    }
+
+    /**
+     * @brief Destroy the RWMutex object
+     */
+    ~RWMutex(){
+        if(pthread_rwlock_destroy(&m_rwlock) != 0){
+            perror("pthread_rwlock_destroy");
+        }
+    }
+
+    /**
+     * @brief read lock
+     * 
+     */
+    void readLock(){
+        if(pthread_rwlock_rdlock(&m_rwlock) != 0){
+            perror("pthread_rwlock_rdlock");
+        }
+    }
+
+    /**
+     * @brief write lock
+     * 
+     */
+     void writeLock(){
+        if(pthread_rwlock_wrlock(&m_rwlock) != 0){
+            perror("pthread_rwlock_wrlock");
+        }
+    }
+
+    /**
+     * @brief unlock
+     * 
+     */
+    void unlock(){
+        if(pthread_rwlock_unlock(&m_rwlock) != 0){
+            perror("pthread_rwlock_unlock");
+        }
+    }
+
+private:
+    pthread_rwlock_t m_rwlock;
+};
+
+
 } // namespace bryant

@@ -58,7 +58,7 @@ Scheduler::Scheduler(int num_thread, bool use_caller, const std::string& name)
         m_rootThread = bryant::GetThreadId();
         m_threads_id.push_back(m_rootThread);
     } else {
-        // 不需要t_schedule_fiber
+        // 主线程不需要t_schedule_fiber
         m_rootThread = -1;
     }
 }
@@ -134,13 +134,13 @@ Scheduler::stop(){
 // 新线程的入口函数
 void
 Scheduler::run(){
+    SetThis(this);
     LOG_DEBUG("[scheduler] Thread %lu t_schedule_fiber %d run", 
                 bryant::GetThreadId(), Fiber::GetThis()->getId());
-    SetThis(this);
-
+    
     // 当use_caller = false 或 当前线程不是主线程
     if(bryant::GetThreadId() != m_rootThread){
-        t_schedule_fiber = bryant::Fiber::GetThis().get(); // 线程主协程
+        t_schedule_fiber = Fiber::GetThis().get(); // 线程主协程
     }
 
     Fiber::ptr idle_fiber(new Fiber(std::bind(&Scheduler::idle, this))); // idle协程
@@ -205,7 +205,7 @@ Scheduler::run(){
         } else {
             // 说明队列已空，调度idle协程进入idle状态
             if(idle_fiber->getState() == Fiber::State::TERM){
-                LOG_DEBUG("[scheduler] idle fiber %d term", Fiber::GetThis()->getId());
+                LOG_DEBUG("[scheduler] idle fiber term");
                 break;
             }
 
@@ -215,6 +215,9 @@ Scheduler::run(){
         }
     } // while(true)
 
+    // 对于use_caller = true来说，t_schedule_fiber的m_run_in_scheduler = false
+    // 因此t_schedule_fiber的resume()里的上下文会和t_thread_fiber交换
+    // 这也导致了下面的Fiber::GetThis()返回的是t_thread_fiber的id
     LOG_DEBUG("[scheduler] Thread %lu t_schedule_fiber %d::run() exit", 
                 bryant::GetThreadId(), Fiber::GetThis()->getId());
 }

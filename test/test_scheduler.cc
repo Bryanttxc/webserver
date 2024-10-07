@@ -16,7 +16,23 @@ void test_fiber() {
 }
 
 
-void test_scheduler(){
+// use_caller = false, three threads
+void test_scheduler_case2(){
+    bryant::Scheduler scheduler(3, false, "test");
+    LOG_DEBUG("Main Thread '%lu', name: '%s' created scheduler", 
+                bryant::GetThreadId(), scheduler.getName().c_str());
+    scheduler.start();
+    LOG_DEBUG("Main Thread scheduler '%s' finish to start", scheduler.getName().c_str());
+    scheduler.schedule(&test_fiber);
+    LOG_DEBUG("Main Thread scheduler '%s' finish to schedule", scheduler.getName().c_str());
+    sleep(1);
+    scheduler.stop();
+    LOG_DEBUG("Main Thread scheduler '%s' finish to stop", scheduler.getName().c_str());
+}
+
+
+// use_caller = true, one thread
+void test_scheduler_case1(){
     bryant::Scheduler scheduler(1, true, "test");
     LOG_DEBUG("Main Thread '%lu', name: '%s' created scheduler", 
                 bryant::GetThreadId(), scheduler.getName().c_str());
@@ -31,6 +47,7 @@ void test_scheduler(){
 
 
 int main(){
-    test_scheduler();
+    // test_scheduler_case1();
+    test_scheduler_case2();
     return 0;
 }

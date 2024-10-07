@@ -15,7 +15,8 @@ set(LIBS_SRC
     ./util/util.cc
     ./fiberLibrary/thread.cc
     ./fiberLibrary/fiber.cc
-    ./fiberLibrary/scheduler.cc)
+    ./fiberLibrary/scheduler.cc
+    ./fiberLibrary/iomanager.cc)
 
 # set library
 add_library(bryant SHARED ${LIBS_SRC})
@@ -47,3 +48,6 @@ target_link_libraries(test_fiber ${LIBS})
 
 add_executable(test_scheduler test/test_scheduler.cc)
 target_link_libraries(test_scheduler ${LIBS})
+
+add_executable(test_iomanager test/test_iomanager.cc)
+target_link_libraries(test_iomanager ${LIBS})
