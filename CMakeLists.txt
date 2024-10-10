@@ -18,6 +18,8 @@ set(LIBS_SRC
     ./fiberLibrary/fiber.cc
     ./fiberLibrary/scheduler.cc
     ./fiberLibrary/iomanager.cc
+    ./fiberLibrary/fdmanager.cc
+    ./fiberLibrary/hook.cc
     ./timer/timer.cc)
 
 # set library
@@ -25,7 +27,9 @@ add_library(bryant SHARED ${LIBS_SRC})
 
 set(LIBS
     bryant
-    pthread)
+    pthread
+    dl
+    mysqlclient)
 
 # # 启用调试符号
 # set(CMAKE_BUILD_TYPE Debug)
@@ -56,3 +60,6 @@ target_link_libraries(test_iomanager ${LIBS})
 
 add_executable(test_timer test/test_timer.cc)
 target_link_libraries(test_timer ${LIBS})
+
+add_executable(test_hook test/test_hook.cc)
+target_link_libraries(test_hook ${LIBS})

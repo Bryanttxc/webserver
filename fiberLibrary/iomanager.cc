@@ -80,7 +80,7 @@ IOManager::addEvent(int fd, Event event, std::function<void()> cb){
         // fd不存在
         m_rwMutex.unlock();
         m_rwMutex.writeLock();
-        contextResize(m_fdContexts.size() * 1.5); // 扩容
+        contextResize(fd * 1.5); // 扩容
         fd_ctx = m_fdContexts[fd];
         m_rwMutex.unlock();
     }

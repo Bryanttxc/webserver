@@ -16,6 +16,9 @@
 ### iomanager 协程IO调度器
 > * 在scheduler的基础上，用epoll解决idle协程忙询占用CPU问题
 > * epoll事件支持添加、删除、取消
+### fdmanager 文件描述符管理器
+> * 采用单例模式，管理文件描述符
+> * 对接入的用户进行管理，包括获取fd状态、删除fd等
 
 ## timer
 定时器相关类
@@ -48,6 +51,9 @@
 > * 测试use_caller=true时，单线程-Fiber的异步运行顺序
 > * 测试use_caller=false时，多线程-Fiber的异步运行顺序
 ### test_iomanager.cc
-> * 待完善
+> * 模拟客户端向指定服务端发送请求，IOManager的addevent和cancelEvent
 ### test_timer.cc
-> * 测试TimerManager的功能是否正常
+> * 创建循环定时器查看TimerMananger函数是否正常运行
+### test_hook.cc
+> * 检查hook的sleep函数是否实现异步
+> * 检查hook的socket函数是否正常运行

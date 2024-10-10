@@ -1,5 +1,6 @@
 #include <cassert>
 
+#include "hook.hh"
 #include "scheduler.hh"
 
 namespace bryant{
@@ -135,9 +136,10 @@ Scheduler::stop(){
 void
 Scheduler::run(){
     SetThis(this);
+    set_hook_enable(true); // enable hook
     LOG_DEBUG("[scheduler] Thread %lu t_schedule_fiber %d run", 
                 bryant::GetThreadId(), Fiber::GetThis()->getId());
-    
+
     // 当use_caller = false 或 当前线程不是主线程
     if(bryant::GetThreadId() != m_rootThread){
         t_schedule_fiber = Fiber::GetThis().get(); // 线程主协程
