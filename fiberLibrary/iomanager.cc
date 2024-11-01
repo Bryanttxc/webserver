@@ -89,7 +89,7 @@ IOManager::addEvent(int fd, Event event, std::function<void()> cb){
 
     // 检测事件重复
     if(fd_ctx->events & event){
-        LOG_ERROR("addEvent assert fd=%d, event=%d, fd_ctx.event=%d", 
+        LOG_ERROR("[IOManager] addEvent assert fd=%d, event=%d, fd_ctx.event=%d", 
                     fd, (EPOLL_EVENTS)event, (EPOLL_EVENTS)fd_ctx->events);
         fd_ctx->mutex.unlock();
         assert(!(fd_ctx->events & event));
@@ -102,7 +102,7 @@ IOManager::addEvent(int fd, Event event, std::function<void()> cb){
     ep_event.data.ptr = fd_ctx;
     int rt = epoll_ctl(m_epollfd, op, fd, &ep_event);
     if(rt){
-        LOG_ERROR("epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
+        LOG_ERROR("[IOManager] epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
                     m_epollfd, op, (EPOLL_EVENTS)ep_event.events, rt, errno,
                     strerror(errno), (EPOLL_EVENTS)fd_ctx->events);
         fd_ctx->mutex.unlock();
@@ -142,7 +142,7 @@ IOManager::delEvent(int fd, Event event){
 
     // 检测事件是否存在
     if(!(fd_ctx->events & event)){
-        LOG_ERROR("delEvent assert fd=%d, event=%d, fd_ctx.event=%d", 
+        LOG_ERROR("[IOManager] delEvent assert fd=%d, event=%d, fd_ctx.event=%d", 
                     fd, (EPOLL_EVENTS)event, (EPOLL_EVENTS)fd_ctx->events);
         assert(fd_ctx->events & event);
     }
@@ -156,7 +156,7 @@ IOManager::delEvent(int fd, Event event){
 
     int rt = epoll_ctl(m_epollfd, op, fd, &ep_event);
     if(rt){
-        LOG_ERROR("epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
+        LOG_ERROR("[IOManager] epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
             m_epollfd, op, (EPOLL_EVENTS)ep_event.events, rt, errno,
             strerror(errno), (EPOLL_EVENTS)fd_ctx->events);
         fd_ctx->mutex.unlock();
@@ -189,7 +189,7 @@ IOManager::cancelEvent(int fd, Event event){
 
     // 检测事件是否存在
     if(!(fd_ctx->events & event)){
-        LOG_ERROR("cancelEvent assert fd=%d, event=%d, fd_ctx.event=%d", 
+        LOG_ERROR("[IOManager] cancelEvent assert fd=%d, event=%d, fd_ctx.event=%d", 
                     fd, (EPOLL_EVENTS)event, (EPOLL_EVENTS)fd_ctx->events);
         assert(fd_ctx->events & event);
     }
@@ -203,7 +203,7 @@ IOManager::cancelEvent(int fd, Event event){
 
     int rt = epoll_ctl(m_epollfd, op, fd, &ep_event);
     if(rt){
-        LOG_ERROR("epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
+        LOG_ERROR("[IOManager] epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
             m_epollfd, op, (EPOLL_EVENTS)ep_event.events, rt, errno,
             strerror(errno), (EPOLL_EVENTS)fd_ctx->events);
         fd_ctx->mutex.unlock();
@@ -243,7 +243,7 @@ IOManager::cancelAll(int fd){
 
     int rt = epoll_ctl(m_epollfd, op, fd, &ep_event);
     if(rt){
-        LOG_ERROR("epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
+        LOG_ERROR("[IOManager] epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
             m_epollfd, op, (EPOLL_EVENTS)ep_event.events, rt, errno,
             strerror(errno), (EPOLL_EVENTS)fd_ctx->events);
         fd_ctx->mutex.unlock();
@@ -367,7 +367,7 @@ IOManager::idle() {
                 continue;
             }
 
-            LOG_ERROR("epoll_wait(%d, %p, %d, %d): rt:%d (errno=%d, str=%s)",
+            LOG_ERROR("[IOManager] epoll_wait(%d, %p, %d, %d): rt:%d (errno=%d, str=%s)",
                 m_epollfd, events, 64, max_timeout, rt, errno, strerror(errno));
             break;
         }
@@ -398,7 +398,7 @@ IOManager::idle() {
 
             fd_ctx->mutex.lock();
             if(event.events & (EPOLLERR | EPOLLHUP)){
-                event.events |= EPOLLIN | EPOLLOUT;
+                event.events |= (EPOLLIN | EPOLLOUT) & fd_ctx->events;
             }
 
             // 将读写事件抽取出来
@@ -423,7 +423,7 @@ IOManager::idle() {
             ep_event.data.ptr = fd_ctx;
             int rt2 = epoll_ctl(m_epollfd, op, fd_ctx->fd, &ep_event);
             if(rt2){
-                LOG_ERROR("epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
+                LOG_ERROR("[IOManager] epoll_ctl(%d, %d, %d): rt:%d (errno=%d, str=%s) fd_ctx->events=%d",
                     m_epollfd, op, (EPOLL_EVENTS)ep_event.events, rt2, errno,
                     strerror(errno), (EPOLL_EVENTS)fd_ctx->events);
                 fd_ctx->mutex.unlock();

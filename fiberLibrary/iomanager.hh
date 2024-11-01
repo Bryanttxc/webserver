@@ -1,3 +1,5 @@
+#pragma once
+
 #include <error.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
